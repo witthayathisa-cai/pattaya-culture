@@ -1057,6 +1057,28 @@
                 right: 0%;
             }
         }
+        @keyframes teacher-greet-mobile {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  35% {
+    transform: translateY(-24px) rotate(-3deg);
+  }
+
+  70% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+/* เพิ่มการขยับเฉพาะมือถือที่อนุญาตแอนิเมชัน */
+@media (max-width: 800px) and
+       (prefers-reduced-motion: no-preference) {
+  .teacher-image.teacher-moving {
+    animation: teacher-greet-mobile 700ms ease-in-out;
+    transform-origin: bottom center;
+  }
+}
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;700&display=swap" rel="stylesheet">
 </head>
