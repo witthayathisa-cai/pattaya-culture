@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="th">
 
-<head>ฟ
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title>เกมจับคู่ภาพปัจจุบันกับภาพอดีต | วัดคู่ชุมชน</title>
@@ -539,18 +539,19 @@
         <header class="top">
             <div>
                 <p class="eyebrow">หน่วยที่ 1 · วัดคู่ชุมชน</p>
-                <h1>จับคู่ภาพ <span>ปัจจุบัน ↔ อดีต</span></h1>
+                <h1>จับคู่ภาพ <span>กิจกรรมทางวัด ↔ กิจกรรมชุมชน</span></h1>
             </div>
             <div class="pill" id="score" aria-label="ความคืบหน้า">จับคู่แล้ว 0 / 3 คู่</div>
         </header>
-        <p class="subtitle">เลือกภาพปัจจุบัน 1 ใบ แล้วเลือกภาพอดีตที่สัมพันธ์กัน เพื่อสำรวจเรื่องราวของวัดกับผู้คน</p>
+        <p class="subtitle">เลือกภาพปัจจุบัน 1 ใบ แล้วเลือกภาพ กิจกรรมทางวัด ที่สัมพันธ์กันกับ "กิจกรรมชุมชน"
+            เพื่อสำรวจเรื่องราวของวัดกับผู้คน </p>
         <section class="board" aria-label="กระดานจับคู่ภาพ">
             <div class="column current">
-                <h2>ภาพปัจจุบัน</h2>
+                <h2>กิจกรรมทางวัด</h2>
                 <div class="cards" id="currentCards"></div>
             </div>
             <div class="column past">
-                <h2>ภาพอดีต</h2>
+                <h2>กิจกรรมชุมชน</h2>
                 <div class="cards" id="pastCards"></div>
             </div>
             <aside class="explanation" aria-label="คำอธิบายความสัมพันธ์">
@@ -582,7 +583,8 @@
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="rules">
             <p class="eyebrow">กิจกรรมเรียนรู้ · วัดคู่ชุมชน</p>
             <h2 id="dialogTitle">กติกาเกมจับคู่ภาพ</h2>
-            <p id="rules">กติกาของเกมส์จับคู่ภาพปัจจุบัน กับภาพอดีต ซึ่งได้เรียนรู้ความสัมพันธ์ของชุมชน ถ้าพร้อมแล้ว
+            <p id="rules">กติกาของเกมส์จับคู่ภาพ"กิจกรรมทางวัด" กับ"กิจกรรมชุมชน" ซึ่งได้เรียนรู้ความสัมพันธ์ของชุมชน
+                ถ้าพร้อมแล้ว
                 เริ่มกันเลยค่ะ</p>
             <p class="tip">เลือกภาพปัจจุบันก่อน แล้วเลือกภาพอดีตที่สัมพันธ์กัน จับคู่ให้ครบทั้ง 3 คู่ค่ะ</p>
             <button type="button" class="button" id="playRules">
@@ -648,6 +650,52 @@
             caption.append(badge, document.createTextNode(pair.title)); b.append(picture, caption);
             b.addEventListener('click', () => choose(b, pair, side)); return b;
         }
+        let correctSoundContext;
+
+        function playCorrectSound() {
+            try {
+                const AudioClass =
+                    window.AudioContext || window.webkitAudioContext;
+
+                if (!AudioClass) return;
+
+                correctSoundContext ??= new AudioClass();
+
+                correctSoundContext.resume().then(() => {
+                    const ctx = correctSoundContext;
+                    const start = ctx.currentTime + 0.02;
+
+                    // เสียงไล่ระดับแบบเก็บคะแนนในเกม
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+
+                    notes.forEach((frequency, index) => {
+                        const oscillator = ctx.createOscillator();
+                        const gain = ctx.createGain();
+
+                        const time = start + index * 0.09;
+                        const duration = index === 3 ? 0.3 : 0.13;
+
+                        oscillator.type = 'triangle';
+                        oscillator.frequency.setValueAtTime(frequency, time);
+
+                        gain.gain.setValueAtTime(0, time);
+                        gain.gain.linearRampToValueAtTime(0.14, time + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(
+                            0.001,
+                            time + duration
+                        );
+
+                        oscillator.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        oscillator.start(time);
+                        oscillator.stop(time + duration + 0.02);
+                    });
+                }).catch(() => { });
+            } catch (error) {
+                // เกมยังทำงานต่อได้ หากอุปกรณ์ไม่รองรับเสียง
+            }
+        }
         function choose(button, pair, side) {
             if (locked || matched.has(pair.id)) return;
             if (side === 'current') {
@@ -657,6 +705,11 @@
             if (!selected) { feedback('เลือกภาพปัจจุบันทางซ้ายก่อนนะคะ'); return; }
             if (selected.id === pair.id) {
                 matched.add(pair.id);
+                // เล่นเสียงเมื่อตอบถูก
+                // คู่สุดท้ายใช้เสียงฉลองถ้วยรางวัลที่เพิ่มไว้แล้ว
+                if (matched.size < PAIRS.length) {
+                    playCorrectSound();
+                }
                 for (const b of document.querySelectorAll('.card')) if (b.dataset.pair === pair.id) { b.classList.remove('selected'); b.classList.add('matched'); b.setAttribute('aria-pressed', 'false'); b.disabled = true; }
                 selected = null; feedback('จับคู่ถูกต้องค่ะ! อ่านคำถามชวนคิด แล้วลองอธิบายจากภาพนะคะ', 'success');
                 document.getElementById('score').textContent = 'จับคู่แล้ว ' + matched.size + ' / ' + PAIRS.length + ' คู่';
