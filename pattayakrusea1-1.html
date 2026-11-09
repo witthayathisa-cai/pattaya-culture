@@ -584,8 +584,20 @@
             <h2 id="dialogTitle">กติกาเกมจับคู่ภาพ</h2>
             <p id="rules">กติกาของเกมส์จับคู่ภาพปัจจุบัน กับภาพอดีต ซึ่งได้เรียนรู้ความสัมพันธ์ของชุมชน ถ้าพร้อมแล้ว
                 เริ่มกันเลยค่ะ</p>
-            <p class="tip">เลือกภาพปัจจุบันก่อน แล้วเลือกภาพอดีตที่สัมพันธ์กัน จับคู่ให้ครบทั้ง 3 คู่ค่ะ</p><button
-                type="button" id="start" class="button primary">เริ่มกันเลย →</button>
+            <p class="tip">เลือกภาพปัจจุบันก่อน แล้วเลือกภาพอดีตที่สัมพันธ์กัน จับคู่ให้ครบทั้ง 3 คู่ค่ะ</p>
+            <button type="button" class="button" id="playRules">
+                🔊 ฟังกติกา
+            </button>
+
+
+
+            <!-- เพิ่มปุ่มตรงนี้ -->
+            <button type="button" id="start" class="button primary">
+                เริ่มกันเลย →
+            </button>
+
+            <p id="rulesAudioStatus" role="status" style="font-size:13px; margin:12px 0;">
+            </p>
         </section>
     </div>
     <div class="reward-overlay" id="rewardPopup" hidden>
@@ -786,6 +798,84 @@
                 closeReward.focus();
             }
         });
+    </script>
+    <audio id="rulesVoice" src="assets/SoundPopup-2.mp3" preload="auto">
+    </audio>
+
+    <script>
+        (() => {
+            const voice = document.getElementById('rulesVoice');
+            const playButton = document.getElementById('playRules');
+            const startButton = document.getElementById('start');
+            const popup = document.getElementById('intro');
+            const message = document.getElementById('rulesAudioStatus');
+
+            voice.volume = 1;
+
+            async function playRules() {
+                try {
+                    await voice.play();
+                    message.textContent = '';
+                } catch (error) {
+                    message.textContent = 'กด “ฟังกติกา” เพื่อเปิดเสียงบรรยายค่ะ';
+                }
+            }
+
+            playButton.addEventListener('click', () => {
+                voice.currentTime = 0;
+                playRules();
+            });
+
+            voice.addEventListener('error', () => {
+                message.textContent =
+                    'ไม่พบไฟล์เสียง กรุณาตรวจสอบ assets/SoundPopup-2.mp3';
+            });
+
+            // หยุดเสียงเมื่อเข้าสู่เกม
+            startButton.addEventListener('click', () => {
+                voice.pause();
+                voice.currentTime = 0;
+            });
+
+            // ให้กด Tab สลับระหว่างปุ่มในป๊อปอัปได้
+            popup.addEventListener('keydown', event => {
+                if (event.key !== 'Tab') return;
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+
+                if (document.activeElement === playButton) {
+                    startButton.focus();
+                } else {
+                    playButton.focus();
+                }
+            }, true);
+
+            // พยายามเล่นทันทีเมื่อป๊อปอัปปรากฏ
+            // เล่นเสียงทันทีเมื่อเข้าหน้า
+            voice.autoplay = true;
+            playRules();
+
+            // หากเบราว์เซอร์บล็อก ให้เริ่มเสียงเมื่อแตะป๊อปอัป
+            function unlockRulesAudio(event) {
+                // ปุ่มเริ่มเกมต้องหยุดเสียง ไม่เปิดเสียงใหม่
+                if (event.target.closest('#start')) return;
+
+                // ไม่เริ่มซ้ำ หากกำลังเล่นหรืออ่านจบแล้ว
+                if (!voice.paused || voice.ended) return;
+
+                playRules();
+            }
+
+            popup.addEventListener('click', unlockRulesAudio);
+
+            // รองรับการใช้แป้นพิมพ์
+            popup.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    unlockRulesAudio(event);
+                }
+            });
+        })();
     </script>
 </body>
 
