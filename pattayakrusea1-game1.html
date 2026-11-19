@@ -918,8 +918,14 @@
       if (dialog) openModal(clues[id][0], '<p>' + clues[id][1] + '</p>');
     }
     function deliver(id) {
-      if (!groups[2].includes(id)) { get("routeHint").textContent = "เลือกเรือหรือตะกร้าของป่าก่อน"; return; }
-      route = ""; collect(id, false); get("market").focus(); get("routeHint").textContent = clues[id][0] + "ถึงตลาดแล้ว";
+      if (!groups[2].includes(id)) {
+        get("routeHint").textContent = "เลือกเรือหรือตะกร้าของป่าก่อน";
+        return;
+      }
+      route = "";
+      collect(id, false);
+      screen.querySelector(`[data-market="${id}"]`)?.focus();
+      get("routeHint").textContent = clues[id][0] + "ถึงตลาดแล้ว";
     }
     function pass() {
       const stage = view;
@@ -933,6 +939,10 @@
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
       const data = button.dataset;
+      if (data.market) {
+        deliver(data.market);
+        return;
+      }
       if (data.stage && Number(data.stage) <= state.done + 1) { go(view === "map" && Number(data.stage) === 1 && state.done === 0 ? "intro" : Number(data.stage)); return; }
       if (data.clue) { collect(data.clue); return; }
       if (data.route) { route = data.route; render(); screen.querySelector('[data-route="' + route + '"]').focus(); return; }
@@ -955,7 +965,6 @@
           go("intro");
           break;
         case "start": go(state.done === 0 ? "intro" : Math.min(4, state.done + 1)); break;
-        case "market": deliver(route); break;
         case "challenge": challenge = true; render(); screen.focus(); break;
         case "backClues": challenge = false; render(); screen.focus(); break;
         case "finish": state.done = 4; save(); chime(); render(); screen.focus(); break;
