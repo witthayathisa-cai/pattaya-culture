@@ -700,6 +700,13 @@
     #screen:has(.routes) .actions+.small {
       text-align: center;
     }
+
+    #routeHint {
+      width: 100%;
+      max-width: 780px;
+      margin-inline: auto;
+      text-align: center;
+    }
   </style>
 </head>
 
@@ -935,17 +942,59 @@
       screen.innerHTML = '<div class="panel"><h1>ผ่านภารกิจแล้ว ' + (first ? '⭐' : '✓') + '</h1><p>' + questions[stage].options[questions[stage].answer] + '</p><button class="primary" data-stage="' + (stage + 1) + '">' + (stage === 3 ? 'ไปภารกิจสรุป' : 'ไปด่าน ' + (stage + 1)) + '</button></div>';
       screen.focus();
     }
+    const landRouteAudio = new Audio(
+      "./Sound/1-เลือกเส้นทางบกแล้ว แตะตลาดเพื่อส่งสินค้า.mp3"
+    );
+    const landMarketAudio = new Audio(
+      "./Sound/1-เส้นทางบกถึงตลาดแล้ว.mp3"
+    );
+    const seaRouteAudio = new Audio(
+      "./Sound/2-เลือกเส้นทางน้ำแล้ว แตะตลาดเพื่อส่งสินค้า.mp3"
+    );
+    const seaMarketAudio = new Audio(
+      "./Sound/2-เส้นทางน้ำเดินทางถึงตลาดแล้ว.mp3");
     screen.addEventListener("click", event => {
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
       const data = button.dataset;
-      if (data.market) {
+      if(data.market) {
         deliver(data.market);
+
+        if (state.sound) {
+          landRouteAudio.pause();
+          seaRouteAudio.pause();
+          landMarketAudio.pause();
+          seaMarketAudio.pause();
+
+          const audio = data.market === "sea" ? seaMarketAudio : landMarketAudio;
+          audio.currentTime = 0;
+          audio.play().catch(error => {
+            console.warn("เล่นเสียงถึงตลาดไม่ได้", error);
+          });
+        }
+
         return;
       }
       if (data.stage && Number(data.stage) <= state.done + 1) { go(view === "map" && Number(data.stage) === 1 && state.done === 0 ? "intro" : Number(data.stage)); return; }
       if (data.clue) { collect(data.clue); return; }
-      if (data.route) { route = data.route; render(); screen.querySelector('[data-route="' + route + '"]').focus(); return; }
+      if (data.route) {
+        route = data.route;
+        render();
+        screen.querySelector(`[data-route="${route}"]`)?.focus();
+
+        if (state.sound) {
+          landRouteAudio.pause();
+          seaRouteAudio.pause();
+
+          const audio = route === "land" ? landRouteAudio : seaRouteAudio;
+          audio.currentTime = 0;
+          audio.play().catch(error => {
+            console.warn("เล่นเสียงไม่ได้", audio.src, error);
+          });
+        }
+
+        return;
+      }
       if (data.answer !== undefined) {
         const q = questions[view];
         if (Number(data.answer) === q.answer) pass();
