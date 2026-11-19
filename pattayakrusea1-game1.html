@@ -800,7 +800,7 @@
     <div class="wrap"><strong>🔎 นักสืบชุมชนนาเกลือ</strong>
       <div class="meter"><span id="prideLabel"></span><progress id="pride" max="100"
           aria-label="ความภาคภูมิใจชุมชน"></progress></div><span id="stars"></span><button id="sound"
-        aria-pressed="false">🔇 เปิดเสียง</button>
+        aria-pressed="false">🔇 เปิดเพลงพื้นหลัง</button>
     </div>
   </header>
   <main class="wrap" id="screen" tabindex="-1"></main>
@@ -856,11 +856,13 @@
       get("pride").value = pride;
       get("prideLabel").textContent = "ความภาคภูมิใจชุมชน " + pride + "%";
       get("stars").textContent = "⭐ ดาวสะสม " + state.done + " ดวง";
-      get("sound").textContent = state.sound ? "🔊 ปิดเสียง" : "🔇 เปิดเสียง";
+      get("sound").textContent = state.sound
+        ? "🔊 ปิดเพลงพื้นหลัง"
+        : "🔇 เปิดเพลงพื้นหลัง";
       get("sound").setAttribute("aria-pressed", state.sound);
     }
     function chime() {
-      if (!state.sound || !window.AudioContext) return;
+      if (!window.AudioContext) return;
       try {
         ctx ||= new AudioContext();
         ctx.resume().catch(() => { });
@@ -1038,26 +1040,23 @@
     );
     const seaMarketAudio = new Audio(
       "./Sound/2-เส้นทางน้ำเดินทางถึงตลาดแล้ว.mp3");
+    function playRouteAudio(audio) {
+      for (const clip of [landRouteAudio, seaRouteAudio, landMarketAudio, seaMarketAudio]) {
+        clip.pause();
+      }
+      audio.currentTime = 0;
+      audio.play().catch(error => {
+        console.warn("เล่นเสียงคำแนะนำไม่ได้", audio.src, error);
+      });
+    }
+
     screen.addEventListener("click", event => {
       const button = event.target.closest("button");
       if (!button || button.disabled) return;
       const data = button.dataset;
       if (data.market) {
         deliver(data.market);
-
-        if (state.sound) {
-          landRouteAudio.pause();
-          seaRouteAudio.pause();
-          landMarketAudio.pause();
-          seaMarketAudio.pause();
-
-          const audio = data.market === "sea" ? seaMarketAudio : landMarketAudio;
-          audio.currentTime = 0;
-          audio.play().catch(error => {
-            console.warn("เล่นเสียงถึงตลาดไม่ได้", error);
-          });
-        }
-
+        playRouteAudio(data.market === "sea" ? seaMarketAudio : landMarketAudio);
         return;
       }
       if (data.stage && Number(data.stage) <= state.done + 1) { go(view === "map" && Number(data.stage) === 1 && state.done === 0 ? "intro" : Number(data.stage)); return; }
@@ -1067,17 +1066,7 @@
         render();
         screen.querySelector(`[data-route="${route}"]`)?.focus();
 
-        if (state.sound) {
-          landRouteAudio.pause();
-          seaRouteAudio.pause();
-
-          const audio = route === "land" ? landRouteAudio : seaRouteAudio;
-          audio.currentTime = 0;
-          audio.play().catch(error => {
-            console.warn("เล่นเสียงไม่ได้", audio.src, error);
-          });
-        }
-
+        playRouteAudio(route === "land" ? landRouteAudio : seaRouteAudio);
         return;
       }
       if (data.answer !== undefined) {
@@ -1139,7 +1128,7 @@
       if (state.sound && bgMusic.paused) syncBackgroundMusic();
     });
 
-    syncBackgroundMusic(); ("click", () => { state.sound = !state.sound; save(); stats(); chime(); });
+    syncBackgroundMusic();
     get("notebook").addEventListener("click", () => {
       openModal("สมุดบันทึกนักสืบ", state.found.size ?
         [...state.found].map(id => '<p><b>' + clues[id][0] + '</b><br>' + clues[id][1] + '</p>').join("") :
