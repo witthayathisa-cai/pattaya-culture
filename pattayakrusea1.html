@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title>หน่วยที่ 1 วัดคู่ชุมชน | ไข่มุกบูรพา พัทยาน่าอยู่</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box
@@ -13,7 +14,7 @@
         body {
             margin: 0;
             color: #10233e;
-            font-family: Tahoma, "Noto Sans Thai", sans-serif;
+            font-family: "Prompt", Tahoma, "Noto Sans Thai", sans-serif;
             background: #b9e3ff url('assets/bg1part1.png') center/cover fixed;
             min-height: 100vh;
             min-height: 100svh
@@ -276,7 +277,13 @@
         .video-section .video-note {
             margin-top: 6px;
         }
+
+        .prompt-font,
+        .prompt-font :is(h1, h2, p, span) {
+            font-family: "Prompt", sans-serif;
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -319,9 +326,9 @@
                 เรามาร่วมกันศึกษาข้อมูลและรับชมแอนิเมชันเพื่อบอกถึงความสำคัญของศาสนสถาน จากนั้นลองตั้งคำถาม
                 พร้อมทั้งสำรวจภาพหรือแผนที่เพื่อค้นหาความสัมพันธ์ระหว่างวัดกับผู้คนกันดูนะคะ หากนักเรียนพร้อมแล้ว
                 เริ่มเรียนรู้ไปพร้อมกันได้เลยค่ะ</p>
-            <div class="actions"><button class="button primary"
-                 id="start" type="button">เริ่มกันเลย →</button>
-                 <button class="audio-button" id="narrate" type="button">▶ ฟังคำแนะนำ</button></div>
+            <div class="actions"><button class="button primary" id="start" type="button">เริ่มกันเลย →</button>
+                <button class="audio-button" id="narrate" type="button">▶ ฟังคำแนะนำ</button>
+            </div>
             <p class="audio-status" id="audioStatus" role="status">กำลังเตรียมเสียงคำแนะนำ…</p>
         </section>
     </div>
