@@ -399,6 +399,20 @@
             padding: 12px 16px
         }
 
+        #intro #rules > p:first-child {
+            margin-bottom: 8px;
+        }
+
+        #intro #rules ol {
+            padding-inline-start: 1.5rem;
+            margin: 0 0 16px;
+            line-height: 1.65;
+        }
+
+        #intro #rules li + li {
+            margin-top: 8px;
+        }
+
         .footnote {
             font-size: 12px;
             line-height: 1.7;
@@ -581,12 +595,17 @@
     </main>
     <div class="overlay" id="intro">
         <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="rules">
-            <p class="eyebrow">กิจกรรมเรียนรู้ · วัดคู่ชุมชน</p>
-            <h2 id="dialogTitle">กติกาเกมจับคู่ภาพ</h2>
-            <p id="rules">กติกาของเกมส์จับคู่ภาพ"กิจกรรมทางวัด" กับ"กิจกรรมชุมชน" ซึ่งได้เรียนรู้ความสัมพันธ์ของชุมชน
-                ถ้าพร้อมแล้ว
-                เริ่มกันเลยค่ะ</p>
-            <p class="tip">เลือกภาพปัจจุบันก่อน แล้วเลือกภาพอดีตที่สัมพันธ์กัน จับคู่ให้ครบทั้ง 3 คู่ค่ะ</p>
+            <p class="eyebrow">เกมนักสืบชุมชนนาเกลือ</p>
+            <h2 id="dialogTitle">ภารกิจของเกม</h2>
+            <div id="rules">
+                <p><strong>กติกาของเกมนักสืบชุมชนนาเกลือ</strong></p>
+                <ol>
+                    <li><strong>สำรวจวัดเก่า</strong> แตะการ์ดอุโบสถไม้และสระโบสถ์เพื่อเก็บเบาะแส</li>
+                    <li><strong>ตามรอยการค้า</strong> ส่งสินค้าจากตะกร้าของป่าและเรือจากทะเลเข้าตลาดให้ครบทั้ง 2 เส้นทาง</li>
+                    <li><strong>ไขปริศนาชื่อของนาเกลือ</strong> เปิดอ่านการ์ดคำบอกเล่าให้ครบทั้ง 3 ใบ</li>
+                </ol>
+                <p class="tip">เมื่อเก็บเบาะแสครบในแต่ละด่าน ให้ตอบคำถามให้ถูกเพื่อไปต่อ จากนั้นนำการ์ดทั้ง 3 ใบมาประกอบป้ายประวัติศาสตร์ เลือกวิธีดูแลชุมชน 1 ข้อ แล้วกด “นำเสนอป้ายของฉัน” เพื่อจบเกม</p>
+            </div>
             <button type="button" class="button" id="playRules">
                 🔊 ฟังกติกา
             </button>
@@ -594,7 +613,7 @@
 
 
             <!-- เพิ่มปุ่มตรงนี้ -->
-            <a class="button primary" href="./pattayakrusea1-game1.html">
+            <a class="button primary" id="start" href="./pattayakrusea1-game1.html">
                 เริ่มกันเลย →
             </a>
 
@@ -628,7 +647,6 @@
             { id: 'tradition', title: 'วัดกับประเพณี', current: 'assets/pair2-current.jpg', past: 'assets/pair2-past.jpg', explanation: 'สังเกตผู้คนและกิจกรรมในภาพ ประเพณีเชื่อมความสัมพันธ์ของคนในชุมชนอย่างไร? มีสิ่งใดเปลี่ยนไปหรือยังคงอยู่?' },
             { id: 'community', title: 'ประเพณีการตักบาตรเทโว', current: 'assets/pair3-current.jpg', past: 'assets/pair3-past.jpg', explanation: 'บรรยากาศ พุทธศาสนิกชนชาวนาเกลือ พัทยา และพื้นที่ใกล้เคียง พาครอบครัวมาร่วมทำบุญตักบาตรกันอย่างเนืองแน่นและคึกคัก ไฮไลต์สำคัญ ถวายข้าวสารอาหารแห้งและเอกลักษณ์ประจำวันออกพรรษาอย่าง "ข้าวต้มหาง" เพื่อสืบสานประเพณีทางพระพุทธศาสนาตามพุทธประวัติ' }
         ];
-        const game = document.getElementById('game'), intro = document.getElementById('intro'), start = document.getElementById('start');
         const status = document.getElementById('status');
         let selected = null, matched = new Set(), locked = false, timer = null;
         const temporaryURLs = new Map();
@@ -767,10 +785,8 @@
             document.getElementById('learned').replaceChildren(); document.getElementById('hint').hidden = false; document.getElementById('complete').hidden = true; document.getElementById('score').textContent = 'จับคู่แล้ว 0 / ' + PAIRS.length + ' คู่'; feedback('เริ่มจากเลือกภาพปัจจุบันทางซ้าย 1 ใบค่ะ');
         }
         PAIRS.forEach((pair, index) => { for (const side of ['current', 'past']) { const label = document.createElement('label'); label.textContent = 'คู่ที่ ' + (index + 1) + ' · ' + (side === 'current' ? 'ปัจจุบัน' : 'อดีต'); const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.addEventListener('change', () => { const file = input.files[0]; if (!file) return; const key = pair.id + side; if (temporaryURLs.has(key)) URL.revokeObjectURL(temporaryURLs.get(key)); temporaryURLs.set(key, URL.createObjectURL(file)); reset(); }); label.append(input); document.getElementById('uploads').append(label); } });
-        start.addEventListener('click', () => { intro.hidden = true; game.inert = false; document.querySelector('#currentCards .card').focus({ preventScroll: true }); });
-        intro.addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); start.focus(); } });
         document.getElementById('reset').addEventListener('click', () => { reset(); document.querySelector('#currentCards .card').focus({ preventScroll: true }); });
-        reset(); start.focus({ preventScroll: true });
+        reset();
         const rewardPopup = document.getElementById('rewardPopup');
         const closeReward = document.getElementById('closeReward');
 
@@ -859,75 +875,49 @@
         (() => {
             const voice = document.getElementById('rulesVoice');
             const playButton = document.getElementById('playRules');
-            const startButton = document.getElementById('start');
+            const startLink = document.getElementById('start');
             const popup = document.getElementById('intro');
             const message = document.getElementById('rulesAudioStatus');
 
-            voice.volume = 1;
+            function updateRulesAudio() {
+                const playing = !voice.paused && !voice.ended;
+                playButton.textContent = playing ? '⏸ หยุดเสียง' : '▶ ฟังกติกา';
+                message.textContent = playing ? 'กำลังฟังเสียงบรรยายกติกา' : '';
+            }
 
             async function playRules() {
                 try {
                     await voice.play();
-                    message.textContent = '';
                 } catch (error) {
-                    message.textContent = 'กด “ฟังกติกา” เพื่อเปิดเสียงบรรยายค่ะ';
+                    if (error.name === 'AbortError') return;
+                    updateRulesAudio();
+                    message.textContent = error.name === 'NotAllowedError'
+                        ? 'กด “ฟังกติกา” เพื่อฟังเสียงบรรยายค่ะ'
+                        : 'เปิดเสียงกติกาไม่ได้ กรุณาตรวจสอบ assets/SoundPopup-2.mp3';
                 }
+            }
+
+            for (const event of ['play', 'pause', 'ended']) {
+                voice.addEventListener(event, updateRulesAudio);
             }
 
             playButton.addEventListener('click', () => {
-                voice.currentTime = 0;
-                playRules();
+                if (voice.paused || voice.ended) playRules();
+                else voice.pause();
             });
 
-            voice.addEventListener('error', () => {
-                message.textContent =
-                    'ไม่พบไฟล์เสียง กรุณาตรวจสอบ assets/SoundPopup-2.mp3';
-            });
+            startLink.addEventListener('click', () => voice.pause());
+            window.addEventListener('pagehide', () => voice.pause());
 
-            // หยุดเสียงเมื่อเข้าสู่เกม
-            startButton.addEventListener('click', () => {
-                voice.pause();
-                voice.currentTime = 0;
-            });
-
-            // ให้กด Tab สลับระหว่างปุ่มในป๊อปอัปได้
             popup.addEventListener('keydown', event => {
                 if (event.key !== 'Tab') return;
-
                 event.preventDefault();
-                event.stopImmediatePropagation();
-
-                if (document.activeElement === playButton) {
-                    startButton.focus();
-                } else {
-                    playButton.focus();
-                }
-            }, true);
-
-            // พยายามเล่นทันทีเมื่อป๊อปอัปปรากฏ
-            // เล่นเสียงทันทีเมื่อเข้าหน้า
-            voice.autoplay = true;
-            playRules();
-
-            // หากเบราว์เซอร์บล็อก ให้เริ่มเสียงเมื่อแตะป๊อปอัป
-            function unlockRulesAudio(event) {
-                // ปุ่มเริ่มเกมต้องหยุดเสียง ไม่เปิดเสียงใหม่
-                if (event.target.closest('#start')) return;
-
-                // ไม่เริ่มซ้ำ หากกำลังเล่นหรืออ่านจบแล้ว
-                if (!voice.paused || voice.ended) return;
-
-                playRules();
-            }
-
-            popup.addEventListener('click', unlockRulesAudio);
-
-            // รองรับการใช้แป้นพิมพ์
-            popup.addEventListener('keydown', event => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    unlockRulesAudio(event);
-                }
+                (document.activeElement === playButton ? startLink : playButton).focus();
             });
+
+            playButton.focus({ preventScroll: true });
+            updateRulesAudio();
+            playRules();
         })();
     </script>
 </body>
