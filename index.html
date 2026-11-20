@@ -926,9 +926,13 @@
         }
 
         .sound-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+            position: absolute;
+            top: auto;
+            right: auto;
+            bottom: calc(100% + 8px);
+            left: calc(44px + 8.333%);
+            transform: translateX(-50%);
+            white-space: nowrap;
             z-index: 20;
             padding: 9px 14px;
             border: 1px solid #93C5FD;
@@ -942,9 +946,8 @@
 
         @media (max-width: 800px) {
             .sound-toggle {
-                top: 20px;
-                bottom: auto;
-                right: 12px;
+                left: calc(28px + 8.333%);
+                transform: translateX(-35%);
                 padding: 7px 10px;
                 font-size: 11px;
             }
@@ -1207,18 +1210,19 @@
                 font-size: 20px;
             }
         }
-        /* ขยายกรอบของหน่วยที่กำลังเลือก */
-.controls .tile.active,
-.controls .tile[aria-selected="true"] {
-  transform: scale(1.15);
-  transform-origin: center;
-  position: relative;
-  z-index: 2;
-}
 
-.controls .tile {
-  transition: transform 0.25s ease;
-}
+        /* ขยายกรอบของหน่วยที่กำลังเลือก */
+        .controls .tile.active,
+        .controls .tile[aria-selected="true"] {
+            transform: scale(1.15);
+            transform-origin: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .controls .tile {
+            transition: transform 0.25s ease;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -1270,6 +1274,9 @@
                 aria-label="หัวข้อก่อนหน้า">‹</button>
             <div class="tabs" id="tabs" role="tablist"></div><button class="arrow" id="next"
                 aria-label="หัวข้อถัดไป">›</button>
+        <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false">
+            🎵 เปิดเพลง
+        </button>
         </nav>
         <footer class="footer"><span>เลื่อนเมาส์ · ปัดหน้าจอ · หรือกดลูกศรเพื่อสำรวจ</span><span id="progress">01 —
                 06</span></footer>
@@ -1440,6 +1447,7 @@
             setTimeout(() => {
                 try {
                     render(current);
+                    syncUnitMusic(current);
                 } finally {
                     disc.style.transform = "translate(0, 0) rotate(0deg) scale(1)";
                     disc.style.opacity = "1";
@@ -1503,16 +1511,20 @@
         // แสดงหัวข้อแรกเมื่อเปิดเว็บไซต์
         render(current);
     </script>
-    <audio id="bgMusic" loop preload="metadata">
-        <source src="assets/background-music.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bgMusic" loop preload="none"></audio>
 
-    <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false">
-        🎵 เปิดเพลง
-    </button>
+
 
     <script>
         const bgMusic = document.getElementById("bgMusic");
+        const unitMusic = {
+            1: './Sound/ชื่อเพลงหน่วยที่1.mp3',
+            2: './Sound/ชื่อเพลงหน่วยที่2.mp3',
+            3: './Sound/ชื่อเพลงหน่วยที่3.mp3',
+            4: './Sound/ชื่อเพลงหน่วยที่4.mp3',
+            5: './Sound/ชื่อเพลงหน่วยที่5.mp3',
+            6: './Sound/ชื่อเพลงหน่วยที่6.mp3',
+        };
         const soundToggle = document.getElementById("soundToggle");
 
         let soundEnabled = false;
@@ -1536,37 +1548,42 @@
             passive: true
         });
         window.addEventListener("keydown", prepareSlideAudio);
-        // ระดับเสียงเพลงพื้นหลัง 15%
         bgMusic.volume = 0.15;
 
-        soundToggle.addEventListener("click", async () => {
-            if (soundEnabled) {
-                soundEnabled = false;
-                bgMusic.pause();
-                soundToggle.textContent = "🎵 เปิดเพลง";
-                soundToggle.setAttribute("aria-pressed", "false");
-                return;
+        function syncUnitMusic(index) {
+            const track = new URL(unitMusic[index + 1], document.baseURI).href;
+
+            if (bgMusic.src !== track) {
+                bgMusic.src = track;
             }
 
-            try {
-                const AudioContextClass =
-                    window.AudioContext || window.webkitAudioContext;
+            if (!soundEnabled) return;
 
-                if (AudioContextClass) {
-                    soundContext ??= new AudioContextClass();
-                    await soundContext.resume();
+            bgMusic.play().catch((error) => {
+                if (!soundEnabled || bgMusic.src !== track || error.name === "AbortError") {
+                    return;
                 }
 
-                await bgMusic.play();
-
-                soundEnabled = true;
-                soundToggle.textContent = "🎵 ปิดเพลง";
-                soundToggle.setAttribute("aria-pressed", "true");
-            } catch (error) {
+                soundEnabled = false;
                 soundToggle.textContent = "🎵 ลองเปิดเพลงอีกครั้ง";
-                console.error("เปิดเสียงไม่สำเร็จ:", error);
+                soundToggle.setAttribute("aria-pressed", "false");
+                console.error("เปิดเพลงประจำหน่วยไม่สำเร็จ:", track, error);
+            });
+        }
+
+        soundToggle.addEventListener("click", () => {
+            soundEnabled = !soundEnabled;
+            soundToggle.textContent = soundEnabled ? "🎵 ปิดเพลง" : "🎵 เปิดเพลง";
+            soundToggle.setAttribute("aria-pressed", String(soundEnabled));
+
+            if (soundEnabled) {
+                syncUnitMusic(current);
+            } else {
+                bgMusic.pause();
             }
         });
+
+        syncUnitMusic(current);
 
         // เสียงเปลี่ยนสไลด์ ทำงานแยกจากปุ่มเปิด–ปิดเพลง
         function playSlideSound() {
