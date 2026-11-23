@@ -443,7 +443,10 @@
 <body>
     <main>
         <header>
-            <div class="brand">วันไหลพัทยา</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="brand">วันไหลพัทยา</div>
+                <button type="button" id="backToIntro" hidden>← กลับหน้าหลัก</button>
+            </div>
             <div>
                 <button id="sound" type="button" aria-pressed="false" hidden>เปิดเสียงอ่าน</button>
                 <button id="read" type="button" hidden>ฟังอีกครั้ง</button>
@@ -453,6 +456,10 @@
         <section class="panel" id="game" aria-label="เกมน้องปอพาเที่ยววันไหลพัทยา"></section>
     </main>
     <script>
+        document.getElementById("backToIntro").addEventListener("click", () => {
+            stopNarration();
+            window.location.href = "./index.html";
+        });
         "use strict";
         const game = document.querySelector("#game");
         const progress = document.querySelector("#progress");
@@ -504,7 +511,7 @@
             stopNarration();
             if (!state.voice) return;
 
-            if ((state.page === "review" || state.page === "ending") && message === narration)  {
+            if ((state.page === "review" || state.page === "ending") && message === narration) {
                 const audio = state.page === "review" ? reviewAudio : endingAudio;
                 audio.currentTime = 0;
                 audio.play().catch(error => {
@@ -753,6 +760,7 @@
 
             state.page = page;
             screens[page]();
+            document.getElementById("backToIntro").hidden = page !== "map";
         }
 
         function finishMission(number) {
